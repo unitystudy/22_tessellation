@@ -11,7 +11,7 @@
     SubShader
     {
         Tags { "RenderType"="Transparent" }
-		Blend SrcAlpha OneMinusSrcAlpha
+		Blend One OneMinusSrcAlpha
         LOD 100
 
         Pass
@@ -184,14 +184,17 @@
 
 				// 表面の色
 				fixed4 albedo = tex2D(_MainTex, i.uv);
-				fixed3 diffuse = albedo * _LightColor0 * max(dot(light_dir, normal), 0);
+				fixed3 diffuse = 0.15 * albedo * _LightColor0 * max(dot(light_dir, normal), 0);
 
 				// 環境マップ
 				float fresnel = 0.08 + (1 - 0.08) * pow(1 - dot(view_dir, normal), 5);
 				fixed4 envmap = fresnel * texCUBE(_EnvTex, normal);
 
-				fixed3 col = diffuse + envmap;
-				fixed alpha = fresnel + 0.1;// 反射とうっすらと色付け分
+				fixed3 specular = 10.0 * fresnel * _LightColor0 * 
+					pow(max(dot(normal, normalize(view_dir + light_dir)), 0), 80);
+
+				fixed3 col = diffuse + specular + envmap;
+				fixed alpha = fresnel;// 反射しなかった分を透けさせる
 
 				return   fixed4(col, alpha);
             }
